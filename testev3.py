@@ -41,14 +41,14 @@ def run():
 			m_left.run_forever(speed_sp=MOTOR_MAX_POWER)
 			m_right.run_forever(speed_sp=MOTOR_MAX_POWER)
 		elif(r1 < VALUE_ON_WHITE and r2 >= VALUE_ON_WHITE):
-			while(r1 < VALUE_ON_WHITE or r2 < VALUE_ON_WHITE + 15):
+			while(r1 < VALUE_ON_WHITE or r2 < VALUE_ON_WHITE + 25):
 				r1 = cl_left.value()
 				r2 = cl_right.value()
 				m_left.run_forever(speed_sp=ROT)
 				m_right.run_forever(speed_sp=-ROT)
 				#m_right.wait_while('running')
 		elif(r1 >= VALUE_ON_WHITE and r2 < VALUE_ON_WHITE):
-			while(r2 < VALUE_ON_WHITE or r1 < VALUE_ON_WHITE + 15):
+			while(r2 < VALUE_ON_WHITE or r1 < VALUE_ON_WHITE + 25):
 				r1 = cl_left.value()
 				r2 = cl_right.value()
 				m_right.run_forever(speed_sp=ROT)
