@@ -33,18 +33,22 @@ def run():
 	while True:
 		error = (cl_left.value() - cl_right.value()) - offset
 		
-		u = kp * error
+		# u < 0 : Sensor direito encostando na linha
+		# u > 0 : Sensor esquerdo encostando na linha
+		# u = 0 : Ambos os sensores na linha, ou nenhum na linha
+
+		u = kp * error # Ganho proporcional ao erro
 
 		print("error = %i u = %i" % (error, u))		
 
-		if u <= 5 and u >= -5 :
+		if u <= 5 and u >= -5 : #Margem para seguir reto
 			m_left.run_forever(speed_sp=MOTOR_MAX_POWER)
 			m_right.run_forever(speed_sp=MOTOR_MAX_POWER)
-		elif u < -5: #Direita no preto
-			m_left.run_forever(speed_sp=MOTOR_MAX_POWER + u)
-			m_right.run_forever(speed_sp=-(MOTOR_MAX_POWER + u))
-		elif u > 5: #Esquerda no preto
-			m_left.run_forever(speed_sp=-(MOTOR_MAX_POWER + u))
-			m_right.run_forever(speed_sp=MOTOR_MAX_POWER + u)
+		if u < -5: #Direita no preto, aumentar força no motor esquerdo e inverter no direito
+			m_left.run_forever(speed_sp=MOTOR_MAX_POWER)
+			m_right.run_forever(speed_sp=MOTOR_MIN_POWER)
+		if u > 5: #Esquerda no preto, aumentar força no motor direito e inverter no esquerdo
+			m_left.run_forever(speed_sp=MOTOR_MIN_POWER)
+			m_right.run_forever(speed_sp=MOTOR_MAX_POWER)
 
 run()
