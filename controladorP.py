@@ -27,20 +27,24 @@ cl_left.mode='COL-REFLECT'
 cl_right.mode='COL-REFLECT'
 
 offset = 0
-kp = 0.2
+kp = 0.05
 
 def run():
-	while True:
-		error = (cl_left.value() - cl_right.value()) - offset
-		
-		# u < 0 : Sensor direito encostando na linha
-		# u > 0 : Sensor esquerdo encostando na linha
-		# u = 0 : Ambos os sensores na linha, ou nenhum na linha
+    while True:
+        error = (cl_left.value() - cl_right.value()) - offset
+        		
+        # u < 0 : Sensor direito encostando na linha
+        # u > 0 : Sensor esquerdo encostando na linha
+        # u = 0 : Ambos os sensores na linha, ou nenhum na linha
 
-		u = kp * error # Ganho proporcional ao erro
+        u = kp * error # Ganho proporcional ao erro
 
-		print("error = %i u = %i" % (error, u))		
+        print("error = %i u = %i" % (error, u))	
 
+        m_left.run_forever(speed_sp=MOTOR_MAX_POWER - (MOTOR_MAX_POWER * u))
+        m_right.run_forever(speed_sp=MOTOR_MAX_POWER + (MOTOR_MAX_POWER * u))	
+
+        """
 		if u <= 5 and u >= -5 : #Margem para seguir reto
 			m_left.run_forever(speed_sp=MOTOR_MAX_POWER)
 			m_right.run_forever(speed_sp=MOTOR_MAX_POWER)
@@ -50,5 +54,5 @@ def run():
 		if u > 5: #Esquerda no preto, aumentar força no motor direito e inverter no esquerdo
 			m_left.run_forever(speed_sp=MOTOR_MIN_POWER)
 			m_right.run_forever(speed_sp=MOTOR_MAX_POWER)
-
+        """
 run()
