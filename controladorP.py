@@ -3,11 +3,10 @@
 from ev3dev.ev3 import *
 from time import sleep
 
-MOTOR_MAX_POWER = -150.0
-MOTOR_MIN_POWER = 150.0
+TP = -100.0
 
-VALUE_ON_WHITE = 70
-VALUE_ON_BLACK = 5
+VALUE_ON_WHITE = 100
+VALUE_ON_BLACK = 9
 VALUE_ON_GREEN = 15
 
 ROT = 100
@@ -27,7 +26,7 @@ cl_left.mode='COL-REFLECT'
 cl_right.mode='COL-REFLECT'
 
 offset = 0
-kp = 0.05
+kp = 9
 
 def run():
     while True:
@@ -41,18 +40,6 @@ def run():
 
         print("error = %i u = %i" % (error, u))	
 
-        m_left.run_forever(speed_sp=MOTOR_MAX_POWER - (MOTOR_MAX_POWER * u))
-        m_right.run_forever(speed_sp=MOTOR_MAX_POWER + (MOTOR_MAX_POWER * u))	
-
-        """
-		if u <= 5 and u >= -5 : #Margem para seguir reto
-			m_left.run_forever(speed_sp=MOTOR_MAX_POWER)
-			m_right.run_forever(speed_sp=MOTOR_MAX_POWER)
-		if u < -5: #Direita no preto, aumentar força no motor esquerdo e inverter no direito
-			m_left.run_forever(speed_sp=MOTOR_MAX_POWER)
-			m_right.run_forever(speed_sp=MOTOR_MIN_POWER)
-		if u > 5: #Esquerda no preto, aumentar força no motor direito e inverter no esquerdo
-			m_left.run_forever(speed_sp=MOTOR_MIN_POWER)
-			m_right.run_forever(speed_sp=MOTOR_MAX_POWER)
-        """
+        m_left.run_forever(speed_sp=TP + u)
+        m_right.run_forever(speed_sp=TP - u)
 run()
