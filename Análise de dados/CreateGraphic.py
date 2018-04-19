@@ -1,10 +1,13 @@
 import pandas as pd
 from matplotlib import style
 import matplotlib.pyplot as plt
+import seaborn as sn
 
-dataset = pd.read_csv('piddata.csv', sep=',')
-dataset['tempo'] = range(0,879)
+sn.set(style='whitegrid')
+
+dataset = pd.read_csv('erro.csv', sep=',')
+dataset['tempo'] =  range(0, len(dataset))
 
 style.use("seaborn-colorblind")
-dataset.plot(x='tempo', y=['erro', 'potencia direita', 'potencia esquerda'])
+dataset.plot(x='tempo', y='erro')
 plt.show()
