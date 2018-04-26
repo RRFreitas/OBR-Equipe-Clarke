@@ -4,7 +4,7 @@ from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_2, OUTPUT_A, OUTPUT_B, LargeM
 from PID import PID
 from os import system
 from time import sleep
-import json
+from json import dump, load
 
 # Instanciando sensores
 cl_left = ColorSensor(address=INPUT_1)
@@ -89,7 +89,7 @@ def calibrar(tela, botao):
 
 	arq = open("sensores.json", "w")
 
-	json.dump(sensores, arq)
+	dump(sensores, arq)
 
 	arq.close()
 
@@ -103,7 +103,7 @@ def lerDados():
 	"""
 
 	arq = open("sensores.json", "r")
-	sensores = json.load(arq)
+	sensores = load(arq)
 	return sensores
 
 def getSensorDireito(dados):
