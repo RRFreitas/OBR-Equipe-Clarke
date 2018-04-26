@@ -1,49 +1,56 @@
 #!/usr/bin/env python3
 
-from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_2, OUTPUT_A, OUTPUT_B, LargeMotor, Button
+from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_2, OUTPUT_A, OUTPUT_B, LargeMotor, Button, Screen
 from PID import PID
 from os import system
 from time import sleep
 import json
 
+# Instanciando sensores
 cl_left = ColorSensor(address=INPUT_1)
 cl_right = ColorSensor(address=INPUT_2)
 
+# Instanciando motores
 m_left = LargeMotor(address=OUTPUT_A)
 m_right = LargeMotor(address=OUTPUT_B)
 
+# Verificando se os sensores/motores estão conectados
 assert cl_left.connected
 assert cl_right.connected
 assert m_left.connected
 assert m_right.connected
 
+# Definindo modo reflectância
 cl_left.mode = 'COL-REFLECT'
 cl_right.mode = 'COL-REFLECT'
 
+# Alterando fonte do brick
 system('setfont Lat15-TerminusBold14')
 
 offset = 0
 
 def menu():
-	
-	button = Button()
+
+	tela = Screen()
+	botao = Button()
+
+	tela.clear()
 	print("Seta esquerda para calibrar <- | Seta direita para rodar ->")
 	
 	while True:
-		if button.left:
-			calibrar()
+		if botao.left:
+			tela.clear()
+			calibrar(tela, botao)
 			break
-		elif button.right:
+		elif botao.right:
+			tela.clear()
 			dados = lerDados()
 			run(11, 0, 0, -170, dados)
 			break
 	menu()
 
-def calibrar():
+def calibrar(tela, botao):
 
-	button = Button()
-
-	
 	sensores = {'esquerdo': {}, 'direito': {}}
 
 	#-------Branco--------
@@ -52,14 +59,16 @@ def calibrar():
 	print("Pressione o botao do meio quando estiver pronto.")
 	
 	while True:
-		if button.enter:
+		if botao.enter:
 			sensorEsquerdo = cl_left.value()
 			sensorDireito = cl_right.value()
 			sensores['esquerdo']['branco'] = sensorEsquerdo
 			sensores['direito']['branco'] = sensorDireito
 			break
 	
-	sleep(1.5)
+	# Limpa tela e espera 1 segundo para soltar o botão
+	tela.clear()
+	sleep(1)
 	
 	#--------Preto--------
 
@@ -67,7 +76,7 @@ def calibrar():
 	print("Pressione o botao do meio quando estiver pronto.")
 
 	while True:
-		if button.enter:
+		if botao.enter:
 			sensorEsquerdo = cl_left.value()
 			sensorDireito = cl_right.value()
 			sensores['esquerdo']['preto'] = sensorEsquerdo
@@ -86,7 +95,13 @@ def calibrar():
 
 	print("Valores salvos.")
 
+	sleep(0.5)
+
 def lerDados():
+	"""
+		Carrega de um arquivo os valores de branco e preto de cada sensor.
+	"""
+
 	arq = open("sensores.json", "r")
 	sensores = json.load(arq)
 	return sensores
@@ -111,23 +126,36 @@ def getSensorEsquerdo(dados):
 
 	return valor
 
-def saturar(tp):
-	if(tp > 1000):
+def saturar(valor):
+	"""
+		Satura para 1000 ou -1000 caso ultrapasse o valor máximo/mínimo
+	"""
+
+	if(valor > 1000):
 		return 1000
-	elif(tp < -1000):
+	elif(valor < -1000):
 		return -1000
 	else:
-		return tp
+		return valor
 
 def run(kp, ki, kd, TP, dados):
+	"""
+		Roda o seguidor de linha.
+
+		Parâmetros:
+			kp: Constante do controlador P
+			ki: Constante do controlador I
+			kd: Constante do controlador D
+			TP: Potência base dos motores
+			dados: Dicionário com os valores de branco e preto de cada sensor.
+	"""
+
 	pid = PID(kp, ki, kd)
 	pid.SetPoint=0.0
 
 	while True:
 		sensorEsquerdo = getSensorEsquerdo(dados)
 		sensorDireito = getSensorDireito(dados)
-
-		print("esquerdo = %i direito = %i" % (sensorEsquerdo, sensorDireito))
 
 		erro = (sensorEsquerdo - sensorDireito) - offset
 
@@ -138,8 +166,6 @@ def run(kp, ki, kd, TP, dados):
 		pid.update(erro)
 
 		u = pid.output
-
-		print(erro)
 
 		l = saturar(TP + u)
 		r = saturar(TP - u)
