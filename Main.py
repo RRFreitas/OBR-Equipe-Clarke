@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_2, OUTPUT_A, OUTPUT_B, LargeMotor, Button, Screen
+from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_2, OUTPUT_A, OUTPUT_B, LargeMotor, Button, Screen, GyroSensor
 from PID import PID
 from os import system
 from time import sleep
@@ -9,6 +9,7 @@ from json import dump, load
 # Instanciando sensores
 cl_left = ColorSensor(address=INPUT_1)
 cl_right = ColorSensor(address=INPUT_2)
+gyro = GyroSensor('in3')
 
 # Instanciando motores
 m_left = LargeMotor(address=OUTPUT_A)
@@ -17,6 +18,7 @@ m_right = LargeMotor(address=OUTPUT_B)
 # Verificando se os sensores/motores estão conectados
 assert cl_left.connected
 assert cl_right.connected
+assert gyro.connected
 assert m_left.connected
 assert m_right.connected
 
@@ -24,10 +26,15 @@ assert m_right.connected
 cl_left.mode = 'COL-REFLECT'
 cl_right.mode = 'COL-REFLECT'
 
+gyro.mode = 'GYRO-ANG'
+
 # Alterando fonte do brick
 system('setfont Lat15-TerminusBold14')
 
 offset = 0
+
+VERDE = 3
+PRETO = 1
 
 def menu():
 
@@ -39,13 +46,13 @@ def menu():
 	
 	while True:
 		if botao.left:
-			tela.clear()
+			system("clear")
 			calibrar(tela, botao)
 			break
 		elif botao.right:
-			tela.clear()
+			system("clear")
 			dados = lerDados()
-			run(11, 0, 0, -170, dados)
+			run(11, 0, 0, -300, dados)
 			break
 	menu()
 
@@ -67,7 +74,7 @@ def calibrar(tela, botao):
 			break
 	
 	# Limpa tela e espera 1 segundo para soltar o botão
-	tela.clear()
+	system("clear")
 	sleep(1)
 	
 	#--------Preto--------
@@ -83,9 +90,25 @@ def calibrar(tela, botao):
 			sensores['direito']['preto'] = sensorDireito
 			break
 
+	system("clear")
+	sleep(1)
+
+	#--------Verde--------
+
+	print("Verde:")
+	print("Pressione o boto do meio quando estiver pronto.")
+
+	while True:
+		if botao.enter:
+			sensorEsquerdo = cl_left.value()
+			sensorDireito = cl_right.value()
+			sensores['esquerdo']['verde'] = sensorEsquerdo
+			sensores['direito']['verde'] = sensorDireito
+			break
+
 	print("Sensores calibrados.")
 	
-	sleep(2)
+	sleep(0.5)
 
 	arq = open("sensores.json", "w")
 
@@ -96,6 +119,7 @@ def calibrar(tela, botao):
 	print("Valores salvos.")
 
 	sleep(0.5)
+	system("clear")
 
 def lerDados():
 	"""
@@ -138,6 +162,34 @@ def saturar(valor):
 	else:
 		return valor
 
+def verificarVerde(sensor):
+	sensor.mode = 'COL-COLOR'
+
+	cor = sensor.value()
+
+	sensor.mode = 'COL-REFLECT'
+	print(cor)
+
+	return cor == VERDE
+
+def verificarPreto(sensor):
+	sensor.mode = 'COL-COLOR'
+	
+	cor = sensor.value()
+	
+	sensor.mode = 'COL-REFLECT'
+	
+	print(cor)
+
+	return cor == PRETO
+
+def virarDireita():
+
+	pos0 = gyro.value()
+	while gyro.value() < pos0 + 80: 
+		m_left.run_forever(speed_sp=-900)
+		m_right.run_forever(speed_sp=900)
+
 def run(kp, ki, kd, TP, dados):
 	"""
 		Roda o seguidor de linha.
@@ -154,6 +206,14 @@ def run(kp, ki, kd, TP, dados):
 	pid.SetPoint=0.0
 
 	while True:
+		if(dados["direito"]["verde"] - 2 < cl_right.value() < dados["direito"]["verde"] + 2):
+			if(verificarVerde(cl_right)):
+				while True:
+					if verificarPreto(cl_right):
+						virarDireita()
+						break
+
+
 		sensorEsquerdo = getSensorEsquerdo(dados)
 		sensorDireito = getSensorDireito(dados)
 
