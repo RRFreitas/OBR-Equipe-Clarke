@@ -217,6 +217,64 @@ def virar(dir):
 		m_left.stop()
 		m_right.stop()
 
+def girar(graus):
+	pos0 = gyro.value()
+	if(graus > 0):
+		while gyro.value() < pos0 + graus:
+			m_left.run_forever(speed_sp=250)
+			m_right.run_forever(speed_sp=-500)
+	else:
+		while gyro.value() > pos0 + graus:
+			m_left.run_forever(speed_sp=-500)
+			m_right.run_forever(speed_sp=250)
+
+	m_left.stop()
+	m_right.stop()
+
+def andarEmGraus(graus):
+	m_left.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
+	m_right.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
+
+def desviar():
+	pos0 = gyro.value()
+
+	"""
+	girar(45)
+	andarEmGraus(-1000)
+	sleep(2)
+
+	girar(-100)
+	andarEmGraus(-1000)
+	sleep(2)
+
+	girar(49)
+
+	andarEmGraus(260)
+	sleep(1)
+	"""
+
+
+	girar(82)
+	sleep(0.1)
+	andarEmGraus(-400)
+	sleep(1)
+
+	girar(-82)
+	sleep(0.1)
+	andarEmGraus(-1000)
+	sleep(2)
+
+	girar(-82)
+	sleep(0.1)
+	andarEmGraus(-500)
+	sleep(1.5)
+
+	girar(82)
+	sleep(0.1)
+
+	andarEmGraus(200)
+	sleep(0.3)
+
 def run(kp, ki, kd, TP, dados):
 	"""
 		Roda o seguidor de linha.
@@ -243,6 +301,9 @@ def run(kp, ki, kd, TP, dados):
 			if(verificarVerde(cl_left)):
 				#offset = 300
 				virar(ESQUERDA)
+
+		if(sonic.value() < 70):
+			desviar()
 
 		sensorEsquerdo = getSensorEsquerdo(dados)
 		sensorDireito = getSensorDireito(dados)

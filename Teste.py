@@ -32,17 +32,28 @@ def andarEmGraus(graus):
 def desviar():
 	pos0 = gyro.value()
 
-	girar(45)
-	andarEmGraus(-1500)
+	girar(82)
+	sleep(0.1)
+	andarEmGraus(-400)
 	sleep(1)
 
-	girar(-85)
-	andarEmGraus(-1500)
-	sleep(1)
+	girar(-82)
+	sleep(0.1)
+	andarEmGraus(-1000)
+	sleep(2)
 
-	girar(45)
+	girar(-82)
+	sleep(0.1)
+	andarEmGraus(-500)
+	sleep(1.5)
+
+	girar(82)
+	sleep(0.1)
+
+	andarEmGraus(200)
+	sleep(0.3)
 while True:
 	print(sonic.value())
-	print(gyro.value())
 	if(sonic.value() < 70):
 		desviar()
+		break
