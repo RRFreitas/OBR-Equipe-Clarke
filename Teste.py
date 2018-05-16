@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 from time import sleep
-from ev3dev.ev3 import LargeMotor, GyroSensor, UltrasonicSensor
+from ev3dev.ev3 import LargeMotor, GyroSensor, UltrasonicSensor, ColorSensor
 from os import system
 
 system('setfont Lat15-TerminusBold14')
 
+cl_left = ColorSensor('in1')
+cl_right = ColorSensor('in2')
 l = LargeMotor('outB')
 r = LargeMotor('outA')
 gyro = GyroSensor('in3')
@@ -34,7 +36,7 @@ def desviar():
 
 	girar(82)
 	sleep(0.1)
-	andarEmGraus(-400)
+	andarEmGraus(-500)
 	sleep(1)
 
 	girar(-82)
@@ -44,13 +46,24 @@ def desviar():
 
 	girar(-82)
 	sleep(0.1)
+	"""
 	andarEmGraus(-500)
 	sleep(1.5)
+	"""
 
-	girar(82)
+	erro = abs(cl_left.value()) + abs(cl_left.value())
+
+	while erro > 30:
+		erro = abs(cl_left.value()) + abs(cl_left.value())
+		l.run_forever(speed_sp=-300)
+		r.run_forever(speed_sp=-300)
+	l.stop()
+	r.stop()
+
+	girar(85)
 	sleep(0.1)
 
-	andarEmGraus(200)
+	andarEmGraus(150)
 	sleep(0.3)
 while True:
 	print(sonic.value())

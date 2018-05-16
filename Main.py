@@ -55,7 +55,7 @@ def menu():
 		elif botao.right:
 			system("clear")
 			dados = lerDados()
-			run(11, 0.1, 0, -260	, dados)
+			run(11, 0.5, 0.3, -260, dados)
 			break
 	menu()
 
@@ -235,7 +235,7 @@ def andarEmGraus(graus):
 	m_left.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
 	m_right.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
 
-def desviar():
+def desviar(dados):
 	pos0 = gyro.value()
 
 	"""
@@ -253,10 +253,11 @@ def desviar():
 	sleep(1)
 	"""
 
+	pos0 = gyro.value()
 
 	girar(82)
 	sleep(0.1)
-	andarEmGraus(-400)
+	andarEmGraus(-500)
 	sleep(1)
 
 	girar(-82)
@@ -266,14 +267,29 @@ def desviar():
 
 	girar(-82)
 	sleep(0.1)
+	"""
 	andarEmGraus(-500)
 	sleep(1.5)
+	"""
 
-	girar(82)
+	andarEmGraus(-180)
+	sleep(0.8)
+
+	erro = abs(cl_left.value()) + abs(cl_left.value())
+
+	while erro > 25:
+		erro = abs(cl_left.value()) + abs(cl_left.value())
+		m_left.run_forever(speed_sp=-300)
+		m_right.run_forever(speed_sp=-300)
+	m_left.stop()
+	m_right.stop()
+
+	girar(85)
 	sleep(0.1)
 
-	andarEmGraus(200)
+	andarEmGraus(120)
 	sleep(0.3)
+
 
 def run(kp, ki, kd, TP, dados):
 	"""
@@ -302,8 +318,8 @@ def run(kp, ki, kd, TP, dados):
 				#offset = 300
 				virar(ESQUERDA)
 
-		if(sonic.value() < 70):
-			desviar()
+		if(sonic.value() < 65):
+			desviar(dados)
 
 		sensorEsquerdo = getSensorEsquerdo(dados)
 		sensorDireito = getSensorDireito(dados)
