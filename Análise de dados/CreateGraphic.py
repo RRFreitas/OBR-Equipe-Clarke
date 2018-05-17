@@ -6,8 +6,8 @@ import seaborn as sn
 sn.set(style='whitegrid')
 
 dataset = pd.read_csv('erro.csv', sep=',')
-dataset['tempo'] =  range(0, len(dataset))
+dataset[''] =  range(0, len(dataset))
 
 style.use("seaborn-colorblind")
-dataset.plot(x='tempo', y='erro')
+dataset.plot(x='', y='erro')
 plt.show()
