@@ -6,6 +6,9 @@ from os import system
 from time import sleep
 from json import dump, load
 
+# Alterando fonte do brick
+system('setfont Lat15-TerminusBold14')
+
 # Instanciando sensores
 cl_left = ColorSensor(address=INPUT_1)
 cl_right = ColorSensor(address=INPUT_2)
@@ -16,22 +19,25 @@ sonic = UltrasonicSensor('in4')
 m_left = LargeMotor(address=OUTPUT_A)
 m_right = LargeMotor(address=OUTPUT_B)
 
-# Verificando se os sensores/motores estão conectados
-assert cl_left.connected
-assert cl_right.connected
-assert gyro.connected
-assert sonic.connected
-assert m_left.connected
-assert m_right.connected
+try:
+	# Verificando se os sensores/motores estão conectados
+	assert cl_left.connected
+	assert cl_right.connected
+	assert gyro.connected
+	assert sonic.connected
+	assert m_left.connected
+	assert m_right.connected
+except:
+	print("ALGUM SENSOR/MOTOR NAO ESTA CONECTADO")
+	sleep(2)
+	system("clear")
+	exit()
 
 # Definindo modo reflectância
 cl_left.mode = 'COL-REFLECT'
 cl_right.mode = 'COL-REFLECT'
 
 gyro.mode = 'GYRO-ANG'
-
-# Alterando fonte do brick
-system('setfont Lat15-TerminusBold14')
 
 offset = 0
 
@@ -55,7 +61,7 @@ def menu():
 		elif botao.right:
 			system("clear")
 			dados = lerDados()
-			run(11, 0.5, 0.3, -260, dados)
+			run(11, 0.5, 0.3, -280, dados)
 			break
 	menu()
 
@@ -99,13 +105,23 @@ def calibrar(botao):
 	#--------Verde--------
 
 	print("Verde:")
-	print("Pressione o boto do meio quando estiver pronto.")
+	print("----ESQUERDO----")
+	print("Pressione o botao do meio quando estiver pronto.")
 
 	while True:
 		if botao.enter:
 			sensorEsquerdo = cl_left.value()
-			sensorDireito = cl_right.value()
 			sensores['esquerdo']['verde'] = sensorEsquerdo
+			break
+
+	sleep(1)
+
+	print("----DIREITO----")
+	print("Pressione o botao do meio quando estiver pronto.")
+
+	while True:
+		if botao.enter:
+			sensorDireito = cl_right.value()
 			sensores['direito']['verde'] = sensorDireito
 			break
 
@@ -191,27 +207,23 @@ def virar(dir):
 
 	Sound.beep()
 
-	if(dir == DIREITA):
+	if(dir == ESQUERDA):
 		m_left.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
 		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
 		sleep(0.1)
 
-		print(pos0)
-		while gyro.value() > pos0 - 70: 
-			print(gyro.value())
+		while gyro.value() > pos0 - 70:
 			m_left.run_forever(speed_sp=-500)
 			m_right.run_forever(speed_sp=250)
 
 		m_left.stop()
 		m_right.stop()
-	elif(dir == ESQUERDA):
+	elif(dir == DIREITA):
 		m_left.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
 		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
 		sleep(0.1)
 
-		print(pos0)
-		while gyro.value() < pos0 + 70: 
-			print(gyro.value())
+		while gyro.value() < pos0 + 70:
 			m_left.run_forever(speed_sp=250)
 			m_right.run_forever(speed_sp=-500)
 		m_left.stop()
@@ -236,22 +248,8 @@ def andarEmGraus(graus):
 	m_right.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
 
 def desviar(dados):
-	pos0 = gyro.value()
 
-	"""
-	girar(45)
-	andarEmGraus(-1000)
-	sleep(2)
-
-	girar(-100)
-	andarEmGraus(-1000)
-	sleep(2)
-
-	girar(49)
-
-	andarEmGraus(260)
-	sleep(1)
-	"""
+	Sound.beep()
 
 	pos0 = gyro.value()
 
@@ -262,18 +260,14 @@ def desviar(dados):
 
 	girar(-82)
 	sleep(0.1)
-	andarEmGraus(-1000)
-	sleep(2)
+	andarEmGraus(-750)
+	sleep(1.5)
 
 	girar(-82)
 	sleep(0.1)
-	"""
-	andarEmGraus(-500)
-	sleep(1.5)
-	"""
 
-	andarEmGraus(-180)
-	sleep(0.8)
+	andarEmGraus(-200)
+	sleep(1.1)
 
 	erro = abs(cl_left.value()) + abs(cl_left.value())
 
@@ -287,7 +281,8 @@ def desviar(dados):
 	girar(85)
 	sleep(0.1)
 
-	andarEmGraus(120)
+	m_left.run_to_rel_pos(position_sp=135, speed_sp=400, stop_action="hold")
+	m_right.run_to_rel_pos(position_sp=135, speed_sp=400, stop_action="hold")
 	sleep(0.3)
 
 
@@ -309,22 +304,51 @@ def run(kp, ki, kd, TP, dados):
 	global offset
 
 	while True:
-		if(dados["direito"]["verde"] - 2 < cl_right.value() < dados["direito"]["verde"] + 2):
-			if(verificarVerde(cl_right)):
-				#offset = -300
+		if(dados["direito"]["verde"] - 2 < cl_right.value() < dados["direito"]["verde"] + 2 or
+			dados["esquerdo"]["verde"] - 2 < cl_left.value() < dados["esquerdo"]["verde"] + 2):
+
+			direitoVendoVerde = verificarVerde(cl_right)
+			esquerdoVendoVerde = verificarVerde(cl_left)
+
+			if(direitoVendoVerde):
 				virar(DIREITA)
-		elif(dados["esquerdo"]["verde"] - 2 < cl_left.value() < dados["esquerdo"]["verde"] + 2):
-			if(verificarVerde(cl_left)):
-				#offset = 300
+			elif(esquerdoVendoVerde):
 				virar(ESQUERDA)
 
-		if(sonic.value() < 65):
+			"""
+			if(direitoVendoVerde and esquerdoVendoVerde):
+				girar(180)
+				sleep(1)
+			elif(direitoVendoVerde or esquerdoVendoVerde):
+				m_left.run_to_rel_pos(position_sp=80, speed_sp=400, stop_action="hold")
+				m_right.run_to_rel_pos(position_sp=80, speed_sp=400, stop_action="hold")
+				sleep(0.3)
+
+				somaRefl = abs(cl_left.value()) + abs(cl_left.value())
+				if(verificarPreto(cl_left) or verificarPreto(cl_right)):
+					m_left.run_to_rel_pos(position_sp=-290, speed_sp=400, stop_action="hold")
+					m_right.run_to_rel_pos(position_sp=-290, speed_sp=400, stop_action="hold")
+					sleep(0.6)
+				else:
+					if(direitoVendoVerde):
+						m_left.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						m_right.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						sleep(0.7)
+						virar(DIREITA)
+					elif(esquerdoVendoVerde):
+						m_left.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						m_right.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						sleep(0.9)
+						virar(ESQUERDA)
+			"""
+
+		if(sonic.value() < 70):
 			desviar(dados)
 
 		sensorEsquerdo = getSensorEsquerdo(dados)
 		sensorDireito = getSensorDireito(dados)
 
-		erro = (sensorEsquerdo - sensorDireito) - offset
+		erro = (sensorDireito - sensorEsquerdo) - offset
 
 		offset = 0
 	    # erro > 0 : Sensor direito encostando na linha
@@ -337,6 +361,9 @@ def run(kp, ki, kd, TP, dados):
 
 		l = saturar(TP + u)
 		r = saturar(TP - u)
+
+		sensorCEsq = cl_left.value()
+		sensorCDir = cl_right.value()
 
 		m_left.run_forever(speed_sp=l)
 		m_right.run_forever(speed_sp=r)
