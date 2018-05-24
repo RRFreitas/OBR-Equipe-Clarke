@@ -61,7 +61,7 @@ def menu():
 		elif botao.right:
 			system("clear")
 			dados = lerDados()
-			run(11, 0.5, 0.3, -280, dados)
+			run(11, 0.5, 0.3, -260, dados)
 			break
 	menu()
 
@@ -142,7 +142,7 @@ def calibrar(botao):
 
 def lerDados():
 	"""
-		Carrega de um arquivo os valores de branco e preto de cada sensor.
+		Carrega de um arquivo os valores de branco, preto e verde de cada sensor.
 	"""
 
 	arq = open("sensores.json", "r")
@@ -269,10 +269,10 @@ def desviar(dados):
 	andarEmGraus(-200)
 	sleep(1.1)
 
-	erro = abs(cl_left.value()) + abs(cl_left.value())
+	reflectancia = abs(cl_left.value()) + abs(cl_left.value())
 
-	while erro > 25:
-		erro = abs(cl_left.value()) + abs(cl_left.value())
+	while reflectancia > 25:
+		reflectancia = abs(cl_left.value()) + abs(cl_left.value())
 		m_left.run_forever(speed_sp=-300)
 		m_right.run_forever(speed_sp=-300)
 	m_left.stop()
