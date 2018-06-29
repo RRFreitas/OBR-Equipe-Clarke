@@ -307,9 +307,10 @@ def run(kp, ki, kd, TP, dados):
 	print("potencia esquerda,potencia direita")
 
 	while True:
-		if(dados["direito"]["verde"] - 2 < cl_right.value() < dados["direito"]["verde"] + 2 or
-			dados["esquerdo"]["verde"] - 2 < cl_left.value() < dados["esquerdo"]["verde"] + 2):
-
+		if(dados["direito"]["verde"] - 1 < cl_right.value() < dados["direito"]["verde"] + 1 or
+			dados["esquerdo"]["verde"] - 1 < cl_left.value() < dados["esquerdo"]["verde"] + 1):
+			print("acho que vi verde... esquerdo: %d, direito: %d" % (cl_left.value(), cl_right.value()))
+			
 			direitoVendoVerde = verificarVerde(cl_right)
 			esquerdoVendoVerde = verificarVerde(cl_left)
 
@@ -336,7 +337,7 @@ def run(kp, ki, kd, TP, dados):
 
 		u = pid.output
 
-		print("%d,%d" % (TP + u, TP - u))
+		#print("%d,%d" % (TP + u, TP - u))
 
 		l = saturar(TP + u)
 		r = saturar(TP - u)
