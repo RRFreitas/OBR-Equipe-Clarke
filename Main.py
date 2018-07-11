@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_4, OUTPUT_A, OUTPUT_D, LargeMotor, Button, Sound, UltrasonicSensor
+from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_4, OUTPUT_A, OUTPUT_C, LargeMotor, Button, Sound, UltrasonicSensor
 from PID import PID
 from os import system
 from time import sleep
@@ -17,7 +17,7 @@ sonic = UltrasonicSensor('in3')
 
 # Instanciando motores
 m_right = LargeMotor(address=OUTPUT_A)
-m_left = LargeMotor(address=OUTPUT_D)
+m_left = LargeMotor(address=OUTPUT_C)
 
 try:
 	# Verificando se os sensores/motores estão conectados
@@ -27,6 +27,7 @@ try:
 	assert sonic.connected
 	assert m_left.connected
 	assert m_right.connected
+
 except:
 	print("ALGUM SENSOR/MOTOR NAO ESTA CONECTADO")
 	sleep(2)
@@ -197,6 +198,20 @@ def verificarPreto(sensor):
 
 	return cor == PRETO
 
+def girar90(dir):
+	m_left.stop()
+	m_right.stop()
+
+	if(dir == ESQUERDA):
+		m_right.run_to_rel_pos(position_sp=42
+		0, speed_sp=500, stop_action="hold")
+		m_left.run_to_rel_pos(position_sp=-420, speed_sp=500, stop_action="hold")
+		sleep(1)
+	elif(dir == DIREITA):
+		m_right.run_to_rel_pos(position_sp=-420, speed_sp=500, stop_action="hold")
+		m_left.run_to_rel_pos(position_sp=420, speed_sp=500, stop_action="hold")
+		sleep(1)
+
 def virar(dir):
 	m_left.stop()
 	m_right.stop()
@@ -286,6 +301,46 @@ def andarEmGraus(graus):
 	m_right.run_to_rel_pos(position_sp=125, speed_sp=400, stop_action="hold")
 	sleep(0.3)"""
 
+def desviar():
+	girar90(DIREITA)
+
+	distancia = sideSonic.value()
+
+	while distancia < 100:
+		distancia = sideSonic.value()
+		m_left.run_forever(speed_sp=-300)
+		m_right.run_forever(speed_sp=-300)
+	
+	m_left.run_forever(speed_sp=-300)
+	m_right.run_forever(speed_sp=-300)
+	sleep(1)
+	girar90(ESQUERDA)
+
+	m_left.run_forever(speed_sp=-300)
+	m_right.run_forever(speed_sp=-300)
+	sleep(2)
+
+	distancia = sideSonic.value()
+	while distancia < 150:
+		distancia = sideSonic.value()
+		m_left.run_forever(speed_sp=-300)
+		m_right.run_forever(speed_sp=-300)
+		print(distancia)
+	
+	m_left.run_forever(speed_sp=-300)
+	m_right.run_forever(speed_sp=-300)
+	sleep(1)
+	girar90(ESQUERDA)
+	
+	reflectancia = abs(cl_left.value()) + abs(cl_left.value())
+
+	while reflectancia > 25:
+		reflectancia = abs(cl_left.value()) + abs(cl_left.value())
+		m_left.run_forever(speed_sp=-300)
+		m_right.run_forever(speed_sp=-300)
+	m_left.stop()
+	m_right.stop()
+	girar90(DIREITA)
 
 def run(kp, ki, kd, TP, dados):
 	"""
@@ -309,8 +364,7 @@ def run(kp, ki, kd, TP, dados):
 	while True:
 		if(dados["direito"]["verde"] - 1 < cl_right.value() < dados["direito"]["verde"] + 1 or
 			dados["esquerdo"]["verde"] - 1 < cl_left.value() < dados["esquerdo"]["verde"] + 1):
-			print("acho que vi verde... esquerdo: %d, direito: %d" % (cl_left.value(), cl_right.value()))
-			
+
 			direitoVendoVerde = verificarVerde(cl_right)
 			esquerdoVendoVerde = verificarVerde(cl_left)
 
@@ -320,7 +374,8 @@ def run(kp, ki, kd, TP, dados):
 				virar(ESQUERDA)
 
 		if(sonic.value() < 60):
-			pass
+			print("uhu")
+			desviar()
 			#desviar(dados)
 
 		sensorEsquerdo = getSensorEsquerdo(dados)
@@ -336,8 +391,6 @@ def run(kp, ki, kd, TP, dados):
 		pid.update(erro)
 
 		u = pid.output
-
-		#print("%d,%d" % (TP + u, TP - u))
 
 		l = saturar(TP + u)
 		r = saturar(TP - u)
