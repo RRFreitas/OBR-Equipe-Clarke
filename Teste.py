@@ -3,59 +3,88 @@
 from time import sleep
 from ev3dev.ev3 import LargeMotor, GyroSensor, UltrasonicSensor, ColorSensor
 from os import system
-from PID import PID
+from threading import Timer
 
 system('setfont Lat15-TerminusBold14')
 
-# Instanciando sensores
 cl_left = ColorSensor('in1')
 cl_right = ColorSensor('in4')
-sideSonic = UltrasonicSensor('in2')
+l = LargeMotor('outA')
+r = LargeMotor('outC')
+gyro = GyroSensor('in2')
 sonic = UltrasonicSensor('in3')
 
-# Instanciando motores
-m_right = LargeMotor('outC')
-m_left = LargeMotor('outA')
-
-def saturar(valor):
-	"""
-		Satura para 1000 ou -1000 caso ultrapasse o valor máximo/mínimo
-	"""
-
-	if(valor > 500):
-		return 500
-	elif(valor < 0):
-		return -500
+def girar(graus):
+	pos0 = int(gyro.value())
+	if(graus > 0):
+		while gyro.value() < pos0 + graus:
+			l.run_forever(speed_sp=-500)
+			r.run_forever(speed_sp=250)
 	else:
-		return valor
+		while gyro.value() > pos0 + graus:
+			l.run_forever(speed_sp=250)
+			r.run_forever(speed_sp=-500)
 
-def desviar():
-	while sideSonic.value() > 100:
-		m_right.run_forever(speed_sp=500)
-		m_left.run_forever(speed_sp=-500)
+	l.stop()
+	r.stop()
 
-	pid = PID(1.5, 0.1, 0.1)
-	pid.SetPoint = 60
+def andarEmCm(cm):
+	andarEmGraus(-28.5 * cm)
 
-	while 1:
-		pid.update(sideSonic.value())
+def andarEmGraus(graus):
+	l.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
+	r.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
 
-		u = pid.output
+def rotina3Piso():
+	gyro.mode = 'GYRO-RATE'
+	gyro.mode = 'GYRO-ANG'
+	andarEmCm(40)
+	sleep(2)
+	girar(-gyro.value())
+	sleep(1)
+	girar(-45)
+	sleep(2)
+	if sonic.value() > 300:
+		andarEmCm(55) #65cm
+		sleep(2)
+	else:
+		girar(80)
+		andarEmCm(65) #65cm
+		sleep(2)
 
-		if(abs(u) > 1000):
-			u = -u
-			u = u/2
-		print(u)
 
-		l = saturar(-200 + u)
-		r = saturar(-200 - u)
+def mapearArea():
+	gyro.mode = 'GYRO-RATE'
+	gyro.mode = 'GYRO-ANG'
 
-		m_right.run_forever(speed_sp=r)
-		m_left.run_forever(speed_sp=l)
 
-while 1:
-	if(sonic.value() < 60):
-		desviar()
+	sonar = {}
 
-	m_right.run_forever(speed_sp=-200)
-	m_left.run_forever(speed_sp=-200)
+	while gyro.value() < 360:
+		l.run_forever(speed_sp=-500)
+		r.run_forever(speed_sp=500)
+		
+		sonar[gyro.value()] = sonic.value()
+
+	l.stop()
+	r.stop()
+
+	print(sonar)
+
+	angulos = list(sonar.keys())
+
+	angulos.sort(key=lambda a: sonar[a])
+	print(angulos)
+
+
+
+mapearArea()
+#rotina3Piso()
+"""
+3ª sala: 107.5cm x 107.5cm
+Entrada: 17cm
+
+Quando terminar tampa:
+	rotina3Piso()
+"""
+

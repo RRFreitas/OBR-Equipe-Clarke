@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ev3dev.ev3 import ColorSensor, INPUT_1, INPUT_4, OUTPUT_A, OUTPUT_C, LargeMotor, Button, Sound, UltrasonicSensor
+from ev3dev.ev3 import ColorSensor, LargeMotor, Button, GyroSensor, Sound, UltrasonicSensor
 from PID import PID
 from os import system
 from time import sleep
@@ -10,24 +10,23 @@ from json import dump, load
 system('setfont Lat15-TerminusBold14')
 
 # Instanciando sensores
-cl_left = ColorSensor(address=INPUT_1)
-cl_right = ColorSensor(address=INPUT_4)
-sideSonic = UltrasonicSensor('in2')
+cl_left = ColorSensor('in1')
+cl_right = ColorSensor('in4')
+gyro = GyroSensor('in2')
 sonic = UltrasonicSensor('in3')
 
 # Instanciando motores
-m_right = LargeMotor(address=OUTPUT_A)
-m_left = LargeMotor(address=OUTPUT_C)
+m_right = LargeMotor('outA')
+m_left = LargeMotor('outC')
 
 try:
 	# Verificando se os sensores/motores estão conectados
 	assert cl_left.connected
 	assert cl_right.connected
-	assert sideSonic.connected
+	assert gyro.connected
 	assert sonic.connected
 	assert m_left.connected
 	assert m_right.connected
-
 except:
 	print("ALGUM SENSOR/MOTOR NAO ESTA CONECTADO")
 	sleep(2)
@@ -37,6 +36,8 @@ except:
 # Definindo modo reflectância
 cl_left.mode = 'COL-REFLECT'
 cl_right.mode = 'COL-REFLECT'
+
+gyro.mode = 'GYRO-ANG'
 
 offset = 0
 
@@ -60,7 +61,7 @@ def menu():
 		elif botao.right:
 			system("clear")
 			dados = lerDados()
-			run(10, 0.5, 0.3, -260, dados)
+			run(11, 0.5, 0.3, -260, dados)
 			break
 	menu()
 
@@ -198,52 +199,36 @@ def verificarPreto(sensor):
 
 	return cor == PRETO
 
-def girar90(dir):
-	m_left.stop()
-	m_right.stop()
-
-	if(dir == ESQUERDA):
-		m_right.run_to_rel_pos(position_sp=42
-		0, speed_sp=500, stop_action="hold")
-		m_left.run_to_rel_pos(position_sp=-420, speed_sp=500, stop_action="hold")
-		sleep(1)
-	elif(dir == DIREITA):
-		m_right.run_to_rel_pos(position_sp=-420, speed_sp=500, stop_action="hold")
-		m_left.run_to_rel_pos(position_sp=420, speed_sp=500, stop_action="hold")
-		sleep(1)
-
 def virar(dir):
 	m_left.stop()
 	m_right.stop()
 
+	pos0 = gyro.value()
+
 	Sound.beep()
 
 	if(dir == ESQUERDA):
-		m_left.run_to_rel_pos(position_sp=-120, speed_sp=500, stop_action="hold")
-		m_right.run_to_rel_pos(position_sp=-120, speed_sp=500, stop_action="hold")
-		sleep(0.5)
+		m_left.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
+		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
+		sleep(0.1)
 
-		m_right.run_to_rel_pos(position_sp=360, speed_sp=500, stop_action="hold")
-		m_left.run_to_rel_pos(position_sp=-360, speed_sp=500, stop_action="hold")
-		sleep(1)
+		while gyro.value() > pos0 - 70:
+			m_left.run_forever(speed_sp=-500)
+			m_right.run_forever(speed_sp=250)
 
-		m_left.run_to_rel_pos(position_sp=-90, speed_sp=500, stop_action="hold")
-		m_right.run_to_rel_pos(position_sp=-90, speed_sp=500, stop_action="hold")
-		sleep(0.5)
+		m_left.stop()
+		m_right.stop()
 	elif(dir == DIREITA):
-		m_left.run_to_rel_pos(position_sp=-120, speed_sp=500, stop_action="hold")
-		m_right.run_to_rel_pos(position_sp=-120, speed_sp=500, stop_action="hold")
-		sleep(0.5)
+		m_left.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
+		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
+		sleep(0.1)
 
-		m_right.run_to_rel_pos(position_sp=-360, speed_sp=500, stop_action="hold")
-		m_left.run_to_rel_pos(position_sp=360, speed_sp=500, stop_action="hold")
-		sleep(1)
+		while gyro.value() < pos0 + 70:
+			m_left.run_forever(speed_sp=250)
+			m_right.run_forever(speed_sp=-500)
+		m_left.stop()
+		m_right.stop()
 
-		m_left.run_to_rel_pos(position_sp=-90, speed_sp=500, stop_action="hold")
-		m_right.run_to_rel_pos(position_sp=-90, speed_sp=500, stop_action="hold")
-		sleep(0.5)
-
-"""
 def girar(graus):
 	pos0 = gyro.value()
 	if(graus > 0):
@@ -257,13 +242,12 @@ def girar(graus):
 
 	m_left.stop()
 	m_right.stop()
-"""
 
 def andarEmGraus(graus):
 	m_left.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
 	m_right.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
 
-"""def desviar(dados):
+def desviar(dados):
 
 	Sound.beep()
 
@@ -276,7 +260,7 @@ def andarEmGraus(graus):
 
 	girar(-82)
 	sleep(0.1)
-	andarEmGraus(-750)
+	andarEmGraus(-800)
 	sleep(1.5)
 
 	girar(-82)
@@ -297,50 +281,10 @@ def andarEmGraus(graus):
 	girar(85)
 	sleep(0.1)
 
-	m_left.run_to_rel_pos(position_sp=125, speed_sp=400, stop_action="hold")
-	m_right.run_to_rel_pos(position_sp=125, speed_sp=400, stop_action="hold")
-	sleep(0.3)"""
+	m_left.run_to_rel_pos(position_sp=185, speed_sp=400, stop_action="hold")
+	m_right.run_to_rel_pos(position_sp=185, speed_sp=400, stop_action="hold")
+	sleep(0.4)
 
-def desviar():
-	girar90(DIREITA)
-
-	distancia = sideSonic.value()
-
-	while distancia < 100:
-		distancia = sideSonic.value()
-		m_left.run_forever(speed_sp=-300)
-		m_right.run_forever(speed_sp=-300)
-	
-	m_left.run_forever(speed_sp=-300)
-	m_right.run_forever(speed_sp=-300)
-	sleep(1)
-	girar90(ESQUERDA)
-
-	m_left.run_forever(speed_sp=-300)
-	m_right.run_forever(speed_sp=-300)
-	sleep(2)
-
-	distancia = sideSonic.value()
-	while distancia < 150:
-		distancia = sideSonic.value()
-		m_left.run_forever(speed_sp=-300)
-		m_right.run_forever(speed_sp=-300)
-		print(distancia)
-	
-	m_left.run_forever(speed_sp=-300)
-	m_right.run_forever(speed_sp=-300)
-	sleep(1)
-	girar90(ESQUERDA)
-	
-	reflectancia = abs(cl_left.value()) + abs(cl_left.value())
-
-	while reflectancia > 25:
-		reflectancia = abs(cl_left.value()) + abs(cl_left.value())
-		m_left.run_forever(speed_sp=-300)
-		m_right.run_forever(speed_sp=-300)
-	m_left.stop()
-	m_right.stop()
-	girar90(DIREITA)
 
 def run(kp, ki, kd, TP, dados):
 	"""
@@ -359,11 +303,9 @@ def run(kp, ki, kd, TP, dados):
 
 	global offset
 
-	print("potencia esquerda,potencia direita")
-
 	while True:
-		if(dados["direito"]["verde"] - 1 < cl_right.value() < dados["direito"]["verde"] + 1 or
-			dados["esquerdo"]["verde"] - 1 < cl_left.value() < dados["esquerdo"]["verde"] + 1):
+		if(dados["direito"]["verde"] - 2 < cl_right.value() < dados["direito"]["verde"] + 2 or
+			dados["esquerdo"]["verde"] - 2 < cl_left.value() < dados["esquerdo"]["verde"] + 2):
 
 			direitoVendoVerde = verificarVerde(cl_right)
 			esquerdoVendoVerde = verificarVerde(cl_left)
@@ -373,10 +315,35 @@ def run(kp, ki, kd, TP, dados):
 			elif(esquerdoVendoVerde):
 				virar(ESQUERDA)
 
-		if(sonic.value() < 60):
-			print("uhu")
-			desviar()
-			#desviar(dados)
+			"""
+			if(direitoVendoVerde and esquerdoVendoVerde):
+				girar(180)
+				sleep(1)
+			elif(direitoVendoVerde or esquerdoVendoVerde):
+				m_left.run_to_rel_pos(position_sp=80, speed_sp=400, stop_action="hold")
+				m_right.run_to_rel_pos(position_sp=80, speed_sp=400, stop_action="hold")
+				sleep(0.3)
+
+				somaRefl = abs(cl_left.value()) + abs(cl_left.value())
+				if(verificarPreto(cl_left) or verificarPreto(cl_right)):
+					m_left.run_to_rel_pos(position_sp=-290, speed_sp=400, stop_action="hold")
+					m_right.run_to_rel_pos(position_sp=-290, speed_sp=400, stop_action="hold")
+					sleep(0.6)
+				else:
+					if(direitoVendoVerde):
+						m_left.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						m_right.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						sleep(0.7)
+						virar(DIREITA)
+					elif(esquerdoVendoVerde):
+						m_left.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						m_right.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
+						sleep(0.9)
+						virar(ESQUERDA)
+			"""
+
+		if(sonic.value() < 80):
+			desviar(dados)
 
 		sensorEsquerdo = getSensorEsquerdo(dados)
 		sensorDireito = getSensorDireito(dados)
