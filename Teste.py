@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from time import sleep
-from ev3dev.ev3 import LargeMotor, GyroSensor, UltrasonicSensor, ColorSensor
+from ev3dev.ev3 import LargeMotor, GyroSensor, UltrasonicSensor, ColorSensor, Sound
 from os import system
 from threading import Timer
 
@@ -18,12 +18,12 @@ def girar(graus):
 	pos0 = int(gyro.value())
 	if(graus > 0):
 		while gyro.value() < pos0 + graus:
-			l.run_forever(speed_sp=-500)
+			l.run_forever(speed_sp=-250)
 			r.run_forever(speed_sp=250)
 	else:
 		while gyro.value() > pos0 + graus:
 			l.run_forever(speed_sp=250)
-			r.run_forever(speed_sp=-500)
+			r.run_forever(speed_sp=-250)
 
 	l.stop()
 	r.stop()
@@ -44,13 +44,16 @@ def rotina3Piso():
 	sleep(1)
 	girar(-45)
 	sleep(2)
-	if sonic.value() > 300:
-		andarEmCm(55) #65cm
-		sleep(2)
+	if sonic.value() > 1000:
+		andarEmCm(65) #65cm
+		sleep(4)
 	else:
 		girar(80)
+		sleep(1)
 		andarEmCm(65) #65cm
-		sleep(2)
+		sleep(4)
+
+	mapearArea()
 
 
 def mapearArea():
@@ -61,13 +64,14 @@ def mapearArea():
 	sonar = {}
 
 	while gyro.value() < 360:
-		l.run_forever(speed_sp=-500)
-		r.run_forever(speed_sp=500)
+		l.run_forever(speed_sp=-150)
+		r.run_forever(speed_sp=150)
 		
 		sonar[gyro.value()] = sonic.value()
 
 	l.stop()
 	r.stop()
+
 
 	print(sonar)
 
@@ -76,15 +80,31 @@ def mapearArea():
 	angulos.sort(key=lambda a: sonar[a])
 	print(angulos)
 
+	angAtual = gyro.value()
+
+	print("Angulo Atual: %d  Angulo do objeto: %d" % (angAtual, angulos[0]))
+
+	girar(angulos[0])
+	Sound.beep()
+
+	while sonic.value() > 150:
+		r.run_forever(speed_sp=-250)
+		l.run_forever(speed_sp=-250)
 
 
-mapearArea()
-#rotina3Piso()
+def mostrarDistancia():
+	while 1:
+		print(sonic.value())
+
+#mostrarDistancia()
+rotina3Piso()
+
+
 """
 3ª sala: 107.5cm x 107.5cm
 Entrada: 17cm
 
-Quando terminar tampa:
+Quando terminar rampa:
 	rotina3Piso()
 """
 

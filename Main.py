@@ -228,6 +228,8 @@ def virar(dir):
 			m_right.run_forever(speed_sp=-500)
 		m_left.stop()
 		m_right.stop()
+	andarEmCm(3)
+	sleep(0.5)
 
 def girar(graus):
 	pos0 = gyro.value()
@@ -246,6 +248,9 @@ def girar(graus):
 def andarEmGraus(graus):
 	m_left.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
 	m_right.run_to_rel_pos(position_sp=graus, speed_sp=900, stop_action="hold")
+
+def andarEmCm(cm):
+	andarEmGraus(-28.5 * cm)
 
 def desviar(dados):
 
