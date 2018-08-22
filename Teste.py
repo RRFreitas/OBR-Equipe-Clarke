@@ -3,7 +3,6 @@
 from time import sleep
 from ev3dev.ev3 import LargeMotor, GyroSensor, UltrasonicSensor, ColorSensor, Sound
 from os import system
-from threading import Timer
 
 system('setfont Lat15-TerminusBold14')
 

@@ -212,7 +212,7 @@ def virar(dir):
 		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
 		sleep(0.1)
 
-		while gyro.value() > pos0 - 70:
+		while gyro.value() > pos0 - 67:
 			m_left.run_forever(speed_sp=-500)
 			m_right.run_forever(speed_sp=250)
 
@@ -223,23 +223,24 @@ def virar(dir):
 		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
 		sleep(0.1)
 
-		while gyro.value() < pos0 + 70:
+		while gyro.value() < pos0 + 67:
 			m_left.run_forever(speed_sp=250)
 			m_right.run_forever(speed_sp=-500)
 		m_left.stop()
 		m_right.stop()
-	andarEmCm(3)
+	andarEmCm(2.7)
 	sleep(0.5)
 
 def girar(graus):
+
 	pos0 = gyro.value()
 	if(graus > 0):
 		while gyro.value() < pos0 + graus:
 			m_left.run_forever(speed_sp=250)
-			m_right.run_forever(speed_sp=-500)
+			m_right.run_forever(speed_sp=-250)
 	else:
 		while gyro.value() > pos0 + graus:
-			m_left.run_forever(speed_sp=-500)
+			m_left.run_forever(speed_sp=-250)
 			m_right.run_forever(speed_sp=250)
 
 	m_left.stop()
@@ -258,20 +259,20 @@ def desviar(dados):
 
 	pos0 = gyro.value()
 
-	girar(82)
+	girar(-85)
 	sleep(0.1)
 	andarEmGraus(-500)
 	sleep(1)
 
-	girar(-82)
+	girar(85)
 	sleep(0.1)
-	andarEmGraus(-800)
-	sleep(1.5)
+	andarEmGraus(-1000)
+	sleep(1.8)
 
-	girar(-82)
+	girar(85)
 	sleep(0.1)
 
-	andarEmGraus(-200)
+	andarEmGraus(-250)
 	sleep(1.1)
 
 	reflectancia = abs(cl_left.value()) + abs(cl_left.value())
@@ -283,13 +284,32 @@ def desviar(dados):
 	m_left.stop()
 	m_right.stop()
 
-	girar(85)
-	sleep(0.1)
+	andarEmCm(2.5)
+	sleep(0.4)
+	girar(-90)
+	sleep(0.6)
 
 	m_left.run_to_rel_pos(position_sp=185, speed_sp=400, stop_action="hold")
 	m_right.run_to_rel_pos(position_sp=185, speed_sp=400, stop_action="hold")
 	sleep(0.4)
 
+
+"""
+	Anda três centímetros para trás e retorna se alguns dos sentores vê preto.
+"""
+def verdePosPreto():
+	m_right.stop()
+	m_left.stop()
+
+	andarEmCm(-2)
+	sleep(0.5)
+
+	posPreto = verificarPreto(cl_left) or verificarPreto(cl_right)
+
+	andarEmCm(2)
+	sleep(0.5)
+
+	return posPreto
 
 def run(kp, ki, kd, TP, dados):
 	"""
@@ -300,7 +320,7 @@ def run(kp, ki, kd, TP, dados):
 			ki: Constante do controlador I
 			kd: Constante do controlador D
 			TP: Potência base dos motores
-			dados: Dicionário com os valores de branco e preto de cada sensor.
+			dados: Dicionário com os valores de branco, preto e verde de cada sensor.
 	"""
 
 	pid = PID(kp, ki, kd)
@@ -315,37 +335,26 @@ def run(kp, ki, kd, TP, dados):
 			direitoVendoVerde = verificarVerde(cl_right)
 			esquerdoVendoVerde = verificarVerde(cl_left)
 
-			if(direitoVendoVerde):
+			#m_right.stop()
+			#m_left.stop()
+			if(direitoVendoVerde and esquerdoVendoVerde):
+				girar(168)
+				andarEmCm(3)
+				sleep(0.5)
+			elif(direitoVendoVerde):
 				virar(DIREITA)
+				"""if(verdePosPreto()):
+					andarEmCm(2)
+					sleep(0.5)
+				else:
+					virar(DIREITA)"""
 			elif(esquerdoVendoVerde):
 				virar(ESQUERDA)
-
-			"""
-			if(direitoVendoVerde and esquerdoVendoVerde):
-				girar(180)
-				sleep(1)
-			elif(direitoVendoVerde or esquerdoVendoVerde):
-				m_left.run_to_rel_pos(position_sp=80, speed_sp=400, stop_action="hold")
-				m_right.run_to_rel_pos(position_sp=80, speed_sp=400, stop_action="hold")
-				sleep(0.3)
-
-				somaRefl = abs(cl_left.value()) + abs(cl_left.value())
-				if(verificarPreto(cl_left) or verificarPreto(cl_right)):
-					m_left.run_to_rel_pos(position_sp=-290, speed_sp=400, stop_action="hold")
-					m_right.run_to_rel_pos(position_sp=-290, speed_sp=400, stop_action="hold")
-					sleep(0.6)
+				"""if(verdePosPreto):
+					andarEmCm(0.5)
+					sleep(1)
 				else:
-					if(direitoVendoVerde):
-						m_left.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
-						m_right.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
-						sleep(0.7)
-						virar(DIREITA)
-					elif(esquerdoVendoVerde):
-						m_left.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
-						m_right.run_to_rel_pos(position_sp=-150, speed_sp=400, stop_action="hold")
-						sleep(0.9)
-						virar(ESQUERDA)
-			"""
+					virar(ESQUERDA)"""
 
 		if(sonic.value() < 80):
 			desviar(dados)
