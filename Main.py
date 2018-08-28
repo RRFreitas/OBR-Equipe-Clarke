@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ev3dev.ev3 import ColorSensor, LargeMotor, Button, GyroSensor, Sound, UltrasonicSensor
+from ev3dev.ev3 import ColorSensor, LargeMotor, Button, GyroSensor, Sound, UltrasonicSensor, ServoMotor
 from PID import PID
 from os import system
 from time import sleep
@@ -16,8 +16,8 @@ gyro = GyroSensor('in2')
 sonic = UltrasonicSensor('in3')
 
 # Instanciando motores
-m_right = LargeMotor('outA')
-m_left = LargeMotor('outC')
+m_right = LargeMotor('outD')
+m_left = LargeMotor('outA')
 
 try:
 	# Verificando se os sensores/motores estão conectados
@@ -38,8 +38,6 @@ cl_left.mode = 'COL-REFLECT'
 cl_right.mode = 'COL-REFLECT'
 
 gyro.mode = 'GYRO-ANG'
-
-offset = 0
 
 VERDE = 3
 PRETO = 1
@@ -208,24 +206,24 @@ def virar(dir):
 	Sound.beep()
 
 	if(dir == ESQUERDA):
-		m_left.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
-		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
+		m_left.run_to_rel_pos(position_sp=-55, speed_sp=900, stop_action="hold")
+		m_right.run_to_rel_pos(position_sp=-55, speed_sp=900, stop_action="hold")
 		sleep(0.1)
 
 		while gyro.value() > pos0 - 67:
-			m_left.run_forever(speed_sp=-500)
-			m_right.run_forever(speed_sp=250)
+			m_left.run_forever(speed_sp=250)
+			m_right.run_forever(speed_sp=-500)
 
 		m_left.stop()
 		m_right.stop()
 	elif(dir == DIREITA):
-		m_left.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
-		m_right.run_to_rel_pos(position_sp=-45, speed_sp=900, stop_action="hold")
+		m_left.run_to_rel_pos(position_sp=-55, speed_sp=900, stop_action="hold")
+		m_right.run_to_rel_pos(position_sp=-55, speed_sp=900, stop_action="hold")
 		sleep(0.1)
 
 		while gyro.value() < pos0 + 67:
-			m_left.run_forever(speed_sp=250)
-			m_right.run_forever(speed_sp=-500)
+			m_left.run_forever(speed_sp=-500)
+			m_right.run_forever(speed_sp=250)
 		m_left.stop()
 		m_right.stop()
 	andarEmCm(2.7)
@@ -236,12 +234,12 @@ def girar(graus):
 	pos0 = gyro.value()
 	if(graus > 0):
 		while gyro.value() < pos0 + graus:
-			m_left.run_forever(speed_sp=250)
-			m_right.run_forever(speed_sp=-250)
-	else:
-		while gyro.value() > pos0 + graus:
 			m_left.run_forever(speed_sp=-250)
 			m_right.run_forever(speed_sp=250)
+	else:
+		while gyro.value() > pos0 + graus:
+			m_left.run_forever(speed_sp=250)
+			m_right.run_forever(speed_sp=-250)
 
 	m_left.stop()
 	m_right.stop()
@@ -261,10 +259,10 @@ def desviar(dados):
 
 	girar(-85)
 	sleep(0.1)
-	andarEmGraus(-500)
+	andarEmGraus(-700)
 	sleep(1)
 
-	girar(85)
+	girar(75)
 	sleep(0.1)
 	andarEmGraus(-1000)
 	sleep(1.8)
@@ -289,8 +287,8 @@ def desviar(dados):
 	girar(-90)
 	sleep(0.6)
 
-	m_left.run_to_rel_pos(position_sp=185, speed_sp=400, stop_action="hold")
-	m_right.run_to_rel_pos(position_sp=185, speed_sp=400, stop_action="hold")
+	m_left.run_to_rel_pos(position_sp=185, speed_sp=200, stop_action="hold")
+	m_right.run_to_rel_pos(position_sp=185, speed_sp=200, stop_action="hold")
 	sleep(0.4)
 
 
@@ -326,7 +324,7 @@ def run(kp, ki, kd, TP, dados):
 	pid = PID(kp, ki, kd)
 	pid.SetPoint=0.0
 
-	global offset
+	offset = dados["direito"]["branco"] - dados["esquerdo"]["branco"]
 
 	while True:
 		if(dados["direito"]["verde"] - 2 < cl_right.value() < dados["direito"]["verde"] + 2 or
@@ -338,7 +336,7 @@ def run(kp, ki, kd, TP, dados):
 			#m_right.stop()
 			#m_left.stop()
 			if(direitoVendoVerde and esquerdoVendoVerde):
-				girar(168)
+				girar(150)
 				andarEmCm(3)
 				sleep(0.5)
 			elif(direitoVendoVerde):
@@ -364,7 +362,6 @@ def run(kp, ki, kd, TP, dados):
 
 		erro = (sensorDireito - sensorEsquerdo) - offset
 
-		offset = 0
 	    # erro > 0 : Sensor direito encostando na linha
 	    # erro < 0 : Sensor esquerdo encostando na linha
 	    # erro = 0 : Ambos os sensores na linha, ou nenhum na linha
@@ -373,8 +370,8 @@ def run(kp, ki, kd, TP, dados):
 
 		u = pid.output
 
-		l = saturar(TP + u)
-		r = saturar(TP - u)
+		l = saturar(TP - u)
+		r = saturar(TP + u)
 
 		sensorCEsq = cl_left.value()
 		sensorCDir = cl_right.value()

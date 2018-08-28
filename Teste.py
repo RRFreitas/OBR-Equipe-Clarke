@@ -37,22 +37,37 @@ def andarEmGraus(graus):
 def rotina3Piso():
 	gyro.mode = 'GYRO-RATE'
 	gyro.mode = 'GYRO-ANG'
-	andarEmCm(40)
+	#andarEmCm(20)
 	sleep(2)
 	girar(-gyro.value())
 	sleep(1)
 	girar(-45)
 	sleep(2)
-	if sonic.value() > 1000:
-		andarEmCm(65) #65cm
+	if sonic.value() > 800:
+		andarEmCm(45) #65cm
 		sleep(4)
 	else:
 		girar(80)
 		sleep(1)
-		andarEmCm(65) #65cm
+		andarEmCm(45) #65cm
 		sleep(4)
 
+	localizarPlataforma()
 	mapearArea()
+
+def localizarPlataforma():
+	gyro.mode = 'GYRO-RATE'
+	gyro.mode = 'GYRO-ANG'
+	cantos = []
+	girar(gyro.value() - 90)
+	sleep(2)
+	cantos.append(gyro.value())
+	girar(gyro.value() + 180)
+	sleep(8)
+	cantos.append(gyro.value())
+	while True:
+		print(cantos)
+		system('clear')
 
 
 def mapearArea():
