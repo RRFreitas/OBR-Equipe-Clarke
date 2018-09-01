@@ -482,8 +482,6 @@ def mapearArea():
 
 	angAtual = gyro.value()
 
-	print("Angulo Atual: %d  Angulo do objeto: %d" % (angAtual, angulos[0]))
-
 	girar(angulos[0])
 
 	distanciaBolinha = sonar[angulos[0]]
@@ -558,11 +556,17 @@ def rotina3Piso(dados):
 		jogarBola()
 		sleep(2)
 
+		voltarGarra()
+		sleep(2)
+
 		irAtePlataforma(-distanciaP)
 		sleep(3)
 
 		girar(-anguloPlataforma)
 		sleep(3)
+
+def voltarGarra():
+	m_garra.run_to_rel_pos(position_sp=225, speed_sp=300, stop_action="hold")
 
 def jogarBola():
 	m_garra.run_to_rel_pos(position_sp=115, speed_sp=300, stop_action="hold")
