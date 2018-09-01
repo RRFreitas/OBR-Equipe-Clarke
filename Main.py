@@ -522,46 +522,47 @@ def rotina3Piso(dados):
 	'''
 	#sonar, angulosOrdenados = mapear(-30)
 	anguloPlataforma, cantos = localizarPlataforma()
-	distanciaBolinha, anguloBolinha = mapearArea()
+	while True:
+		distanciaBolinha, anguloBolinha = mapearArea()
 
-	distanciaPlataforma = cantos[anguloPlataforma]['distancia']
+		distanciaPlataforma = cantos[anguloPlataforma]['distancia']
 
-	distancia = distanciaBolinha / 10 - 7.5 #7.5 é a distancia que o robo tem que ficar da bola pra garrar pegar
+		distancia = distanciaBolinha / 10 - 7.5 #7.5 é a distancia que o robo tem que ficar da bola pra garrar pegar
 
-	distanciaP = distanciaPlataforma / 10 #3.5 é a distancia que o robo tem que ficar da plataforma para jogar a bola
+		distanciaP = distanciaPlataforma / 10 #3.5 é a distancia que o robo tem que ficar da plataforma para jogar a bola
 
-	irAteBolinha(distancia)
-	sleep(3)
+		irAteBolinha(distancia)
+		sleep(3)
 
-	girar(180)
-	sleep(2)
+		girar(180)
+		sleep(2)
 
-	baixarGarra()
-	sleep(2)
+		baixarGarra()
+		sleep(2)
 
-	girar(-180)
-	sleep(2)
+		girar(-180)
+		sleep(2)
 
-	irAteBolinha(-distancia)
-	sleep(3)
+		irAteBolinha(-distancia)
+		sleep(3)
 
-	girar(-anguloBolinha)
-	sleep(3)
+		girar(-anguloBolinha)
+		sleep(3)
 
-	girar(anguloPlataforma)	
-	sleep(3)
+		girar(anguloPlataforma)	
+		sleep(3)
 
-	irAtePlataforma(distanciaP)
-	sleep(3)
+		irAtePlataforma(distanciaP)
+		sleep(3)
 
-	jogarBola()
-	sleep(2)
+		jogarBola()
+		sleep(2)
 
-	irAtePlataforma(-distanciaP)
-	sleep(3)
+		irAtePlataforma(-distanciaP)
+		sleep(3)
 
-	girar(-anguloPlataforma)
-	sleep(3)
+		girar(-anguloPlataforma)
+		sleep(3)
 
 def jogarBola():
 	m_garra.run_to_rel_pos(position_sp=115, speed_sp=300, stop_action="hold")
