@@ -570,9 +570,11 @@ def voltarGarra():
 
 def jogarBola():
 	m_garra.run_to_rel_pos(position_sp=115, speed_sp=300, stop_action="hold")
-
+	
 def baixarGarra():
 	m_garra.run_to_rel_pos(position_sp=-225, speed_sp=200, stop_action="hold")
+	sleep(1.2)
+	m_garra.run_to_rel_pos(position_sp=15, speed_sp=200, stop_action="hold")
 
 def irAteBolinha(distancia):
 	andarEmCm(distancia)
